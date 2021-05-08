@@ -11,8 +11,8 @@ pushd "%~pd0"
 :: +---Run	-> El programa o diferentes versiones del programa organizadas por directorios (v1, v4, etc.)
 ::
 
-set scriptversion=2.3
-set scriptdate=23 Febrero 2013
+set scriptversion=2.4
+set scriptdate=3 Junio 2015
 set scriptauthor=Manel Rodero
 set nversiones=0
 
@@ -50,21 +50,13 @@ goto instrucciones
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :ejecutar
-if /i "%numversiones%"=="1" (
-	call :linkar
-	call :precheck
-	echo Ejecutando '%titulo% %vrun%' ...
-	pushd ".\Run"
-	start "" "%programa%"
-	popd
-) else (
-	call :linkar %vrun%
-	call :precheck %vrun%
-	echo Ejecutando '%titulo% %vrun%' ...
-	pushd ".\Run\%vrun%"
-	start "" "%programa%"
-	popd
-)
+set programa=%programa:"=%
+call :linkar %vrun%
+call :precheck %vrun%
+echo Ejecutando '%titulo% %vrun%' ...
+pushd ".\Run\%vrun%"
+start "" "%programa%"
+popd
 goto final
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
