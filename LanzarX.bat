@@ -11,7 +11,7 @@ pushd "%~pd0"
 :: +---Run	-> El programa o diferentes versiones del programa organizadas por directorios (v1, v4, etc.)
 ::
 
-set scriptversion=2.2
+set scriptversion=2.3
 set scriptdate=23 Febrero 2013
 set scriptauthor=Manel Rodero
 set nversiones=0
@@ -27,8 +27,9 @@ set nversiones=0
 :: RoamingDir = (Opcional) Nombre del directorio creado en %AppData%
 
 set titulo=ProgramaX
-set versiones=(1.0.0)
+set versiones=(1.0.0 2.0.0)
 set programa=programax.exe
+set localdir=programax.com
 set roamingdir=programax.com
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -36,7 +37,7 @@ set roamingdir=programax.com
 :: NO MODIFICAR desde aquí, es un código común a todos los scripts
 ::
 
-:: Obtenemos el n�mero de versiones y se inicializa una variable indexada "Run.X"
+:: Obtenemos el número de versiones y se inicializa una variable indexada "Run.X"
 for %%v in %versiones% do (
 	set /a numversiones=!numversiones!+1
 	set run.!numversiones!=%%v
@@ -51,12 +52,14 @@ goto instrucciones
 :ejecutar
 if /i "%numversiones%"=="1" (
 	call :linkar
+	call :precheck
 	echo Ejecutando '%titulo% %vrun%' ...
 	pushd ".\Run"
 	start "" "%programa%"
 	popd
 ) else (
 	call :linkar %vrun%
+	call :precheck %vrun%
 	echo Ejecutando '%titulo% %vrun%' ...
 	pushd ".\Run\%vrun%"
 	start "" "%programa%"
@@ -89,12 +92,36 @@ if not "%roamingdir%"=="" (
 	if exist "%appdata%\%roamingdir%" rmdir "%appdata%\%roamingdir%"
 	if /i "%1"=="" (
 		if not exist .\Roaming mkdir .\Roaming
-		echo Creando link en %%AppData%% -^> .\Local ...
+		echo Creando link en %%AppData%% -^> .\Roaming ...
 		mklink /j "%appdata%\%roamingdir%" .\Roaming > nul
 	) else (
 		if not exist .\Roaming\%1 mkdir .\Roaming\%1
-		echo Creando link en %%AppData%% -^> .\Local\%1 ...
+		echo Creando link en %%AppData%% -^> .\Roaming\%1 ...
 		mklink /j "%appdata%\%roamingdir%" .\Roaming\%1 > nul
+	)
+)
+goto :eof
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::
+:: MODIFICAR esta rutina según el programa que se quiera ejecutar (podría estar vacía si no es necesario hacer nada)
+::
+:: Ejemplo:
+:: - Crear un fichero 'programax.ini' vacío para que el programa escriba la configuración y no use el registro
+:: - Borrar la rama del registro donde guarda la configuración si no es portable
+::
+:precheck
+if /i "%1"=="" (
+	if not exist ".\Run\programax.ini" (
+		echo Creando fichero programax.ini ...
+		> ".\Run\programax.ini" echo [Settings]
+		reg delete HKEY_CURRENT_USER\Software\ProgramaX /f >nul 2>&1
+	)
+) else (
+	if not exist ".\Run\%1\programax.ini" (
+		echo Creando fichero programax.ini ...
+		> ".\Run\%1\programax.ini" echo [Settings]
+		reg delete HKEY_CURRENT_USER\Software\ProgramaX /f >nul 2>&1
 	)
 )
 goto :eof
@@ -112,7 +139,7 @@ for /l %%i in (1,1,%numversiones%) do (
 )
 echo.
 echo Examples:
-echo   %~n0 1 =^> Run program number 1
+echo   %~n0 1 =^> Run %titulo% version %run.1%
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :final
